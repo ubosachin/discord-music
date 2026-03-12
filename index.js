@@ -42,18 +42,23 @@ startDashboard(client);
 setupPlayDl().then(async () => {
     addLog('INFO', 'play-dl setup complete.');
     
-    // Deploy slash commands programmatically
-    await deployCommands();
-
     if (!process.env.DISCORD_TOKEN) {
         console.error('❌ CRITICAL: DISCORD_TOKEN is missing in environment variables!');
         addLog('ERROR', 'DISCORD_TOKEN is missing in Render environment variables.');
         return;
     }
 
+    // Login immediately
     client.login(process.env.DISCORD_TOKEN).catch(err => {
         console.error('❌ Failed to login to Discord:', err.message);
         addLog('ERROR', `Login failed: ${err.message}`);
+    });
+
+    // Deploy slash commands programmatically in background (don't await here to avoid blocking login)
+    deployCommands().then(() => {
+        addLog('INFO', 'Slash commands sync complete.');
+    }).catch(err => {
+        addLog('ERROR', `Slash commands sync failed: ${err.message}`);
     });
     
     // 24/7 Connectivity: Self-ping the dashboard

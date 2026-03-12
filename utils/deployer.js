@@ -1,6 +1,7 @@
 const { REST, Routes } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const { addLog } = require('./logger');
 
 async function deployCommands() {
     const commands = [];
@@ -31,6 +32,7 @@ async function deployCommands() {
         console.log(`✅ Successfully deployed slash commands.`);
     } catch (error) {
         console.error('❌ Deploy error:', error);
+        addLog('ERROR', `Slash command deployment failed: ${error.message}`);
     }
 }
 
