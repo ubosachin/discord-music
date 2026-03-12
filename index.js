@@ -30,15 +30,20 @@ for (const file of fs.readdirSync(path.join(__dirname, 'events')).filter(f => f.
     else          client.on(evt.name,   (...a) => evt.execute(...a, client));
 }
 
+const { addLog } = require('./utils/logger');
+
 // Initialise play-dl with YouTube cookies FIRST, then login
 setupPlayDl().then(() => {
     if (!process.env.DISCORD_TOKEN) {
         console.error('❌ CRITICAL: DISCORD_TOKEN is missing in environment variables!');
+        addLog('ERROR', 'DISCORD_TOKEN is missing in Render environment variables.');
+        startDashboard(client);
         return;
     }
 
     client.login(process.env.DISCORD_TOKEN).catch(err => {
         console.error('❌ Failed to login to Discord:', err.message);
+        addLog('ERROR', `Login failed: ${err.message}`);
     });
     
     startDashboard(client);
