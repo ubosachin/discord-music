@@ -8,16 +8,24 @@ const fs   = require('fs');
 const path = require('path');
 
 async function setupPlayDl() {
-    const cookiesPath = path.join(__dirname, '..', 'cookies.json');
-
-    if (!fs.existsSync(cookiesPath)) {
-        console.warn('⚠️  No cookies.json found. YouTube may block streams.');
-        console.warn('    Export cookies from youtube.com and save as cookies.json.');
-        return;
+    let raw = "";
+    
+    // 1. Check if cookies are provided via Environment Variable (Recommended for Render/Vercel)
+    if (process.env.YOUTUBE_COOKIES) {
+        console.log('✅ play-dl: Using cookies from environment variable.');
+        raw = process.env.YOUTUBE_COOKIES.trim();
+    } 
+    // 2. Fallback to cookies.json file
+    else {
+        const cookiesPath = path.join(__dirname, '..', 'cookies.json');
+        if (!fs.existsSync(cookiesPath)) {
+            console.warn('⚠️  No YOUTUBE_COOKIES env or cookies.json found. YouTube may block streams.');
+            return;
+        }
+        raw = fs.readFileSync(cookiesPath, 'utf8').trim();
     }
 
     try {
-        const raw = fs.readFileSync(cookiesPath, 'utf8').trim();
         let cookiesArr;
 
         // Support both JSON array and Netscape txt format

@@ -3,8 +3,7 @@ const app = express();
 const path = require('path');
 const { logs } = require('./utils/logger');
 
-// Export app for Vercel
-module.exports = app;
+// Export will be handled at the end of the file
 
 let discordClient = null;
 
@@ -54,4 +53,4 @@ function formatUptime(ms) {
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
 
-module.exports = { startDashboard };
+module.exports = { startDashboard, app };
