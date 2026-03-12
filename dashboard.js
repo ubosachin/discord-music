@@ -13,13 +13,14 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
+    const status = discordClient?.isReady() ? 'Online' : 'Offline/Connecting...';
     const stats = {
         guilds: discordClient?.guilds.cache.size || 0,
         users: discordClient?.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0) || 0,
         uptime: formatUptime(discordClient?.uptime || 0),
-        ping: discordClient?.ws.ping || 0,
+        ping: Math.round(discordClient?.ws.ping) || 0,
         players: discordClient?.players?.size || 0,
-        status: discordClient ? 'Online' : 'Starting bot...'
+        status: status
     };
     res.render('index', { stats, logs });
 });

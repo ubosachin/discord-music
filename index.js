@@ -32,11 +32,21 @@ for (const file of fs.readdirSync(path.join(__dirname, 'events')).filter(f => f.
 
 // Initialise play-dl with YouTube cookies FIRST, then login
 setupPlayDl().then(() => {
-    client.login(process.env.DISCORD_TOKEN);
+    if (!process.env.DISCORD_TOKEN) {
+        console.error('❌ CRITICAL: DISCORD_TOKEN is missing in environment variables!');
+        return;
+    }
+
+    client.login(process.env.DISCORD_TOKEN).catch(err => {
+        console.error('❌ Failed to login to Discord:', err.message);
+    });
+    
     startDashboard(client);
     
     // 24/7 Connectivity: Self-ping the dashboard
     if (process.env.DASHBOARD_URL) {
         keepAlive(process.env.DASHBOARD_URL);
     }
+}).catch(err => {
+    console.error('❌ Initialization error:', err);
 });
