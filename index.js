@@ -31,15 +31,20 @@ for (const file of fs.readdirSync(path.join(__dirname, 'events')).filter(f => f.
 }
 
 const { addLog } = require('./utils/logger');
+const { deployCommands } = require('./utils/deployer');
+
 addLog('INFO', 'Bot process initialized.');
 
-// Start the dashboard immediately so Render sees the app as "Live"
+// 1. Start the dashboard IMMEDIATELY (Fixes Render "No open ports" error)
 startDashboard(client);
 
-// Initialise play-dl with YouTube cookies FIRST, then login
-setupPlayDl().then(() => {
+// 2. Initialise play-dl and deploy commands in background
+setupPlayDl().then(async () => {
     addLog('INFO', 'play-dl setup complete.');
     
+    // Deploy slash commands programmatically
+    await deployCommands();
+
     if (!process.env.DISCORD_TOKEN) {
         console.error('❌ CRITICAL: DISCORD_TOKEN is missing in environment variables!');
         addLog('ERROR', 'DISCORD_TOKEN is missing in Render environment variables.');

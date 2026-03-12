@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "render-start": "node deploy-commands.js && node index.js",
+    "render-start": "node index.js",
     "build": "echo 'No build step required'",
     "deploy": "node deploy-commands.js"
   },
