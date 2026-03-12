@@ -10,6 +10,7 @@ const {
 const { ActivityType } = require('discord.js');
 
 const { spawn }           = require('child_process');
+const ffmpegStatic        = require('ffmpeg-static');
 const { play }            = require('../utils/playdlSetup');
 const { buildMusicPanel } = require('../ui/musicPanel');
 const { robustSearch }    = require('../utils/search');
@@ -59,6 +60,8 @@ function detectGenre(title) {
  * Returns a Readable stream of raw Opus audio.
  */
 function createYtdlpStream(url) {
+    console.log(`[Stream] Starting yt-dlp for: ${url}`);
+    
     const ytdlp = spawn('yt-dlp', [
         '-f', 'ba/best',
         '--no-playlist',
@@ -67,7 +70,7 @@ function createYtdlpStream(url) {
         url,
     ]);
 
-    const ffmpeg = spawn('ffmpeg', [
+    const ffmpeg = spawn(ffmpegStatic, [
         '-i', 'pipe:0',
         '-probesize', '5M',
         '-analyzeduration', '5M',
@@ -82,8 +85,13 @@ function createYtdlpStream(url) {
     ytdlp.stdout.pipe(ffmpeg.stdin);
 
     // Suppress EPIPE — occurs when ffmpeg closes stdin before yt-dlp finishes
-    ffmpeg.stdin.on('error', () => {});
-    ytdlp.stdout.on('error', () => {});
+    ffmpeg.stdin.on('error', (err) => {
+        if (err.code !== 'EPIPE') console.error('[ffmpeg-stdin-error]', err.message);
+    });
+    
+    ytdlp.stdout.on('error', (err) => {
+        console.error('[ytdlp-stdout-error]', err.message);
+    });
 
     ytdlp.stderr.on('data', d => {
         const msg = d.toString().trim();
@@ -92,12 +100,18 @@ function createYtdlpStream(url) {
 
     ffmpeg.stderr.on('data', d => {
         const msg = d.toString().trim();
-        // Ignore "Broken pipe" errors which naturally occur on skip/stop
         if (msg && !msg.includes('Broken pipe')) console.error('[ffmpeg]', msg);
     });
 
-    ytdlp.on('error', err => console.error('[yt-dlp spawn error]', err.message));
-    ffmpeg.on('error', err => console.error('[ffmpeg spawn error]', err.message));
+    ytdlp.on('error', err => {
+        console.error('[yt-dlp spawn error]', err.message);
+        addLog('ERROR', `yt-dlp error: ${err.message}. Ensure yt-dlp is installed.`);
+    });
+    
+    ffmpeg.on('error', err => {
+        console.error('[ffmpeg spawn error]', err.message);
+        addLog('ERROR', `ffmpeg error: ${err.message}`);
+    });
 
     return ffmpeg.stdout;
 }
