@@ -10,7 +10,6 @@ const {
 const { ActivityType } = require('discord.js');
 
 const { spawn }           = require('child_process');
-const ffmpegStatic        = require('ffmpeg-static');
 const { play }            = require('../utils/playdlSetup');
 const { buildMusicPanel } = require('../ui/musicPanel');
 const { robustSearch }    = require('../utils/search');
@@ -62,15 +61,16 @@ function detectGenre(title) {
 function createYtdlpStream(url) {
     console.log(`[Stream] Starting yt-dlp for: ${url}`);
     
-    const ytdlp = spawn('yt-dlp', [
+    const ytdlp = spawn('python3', [
+        '-m', 'yt_dlp',
         '-f', 'ba/best',
         '--no-playlist',
         '--no-warnings',
         '-o', '-',
         url,
-    ]);
+    ], { shell: true });
 
-    const ffmpeg = spawn(ffmpegStatic, [
+    const ffmpeg = spawn('ffmpeg', [
         '-i', 'pipe:0',
         '-probesize', '5M',
         '-analyzeduration', '5M',
